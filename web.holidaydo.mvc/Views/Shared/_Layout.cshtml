@@ -12,14 +12,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="https://kit.fontawesome.com/9d2607adf3.js" crossorigin="anonymous"></script>
-    <link href="/holidaydo-theme.css?v=2" rel="stylesheet">
+    <link href="/holidaydo-theme.css?v=4" rel="stylesheet">
     <link rel="icon" href="/img/fav/holidaydo_favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/img/fav/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/img/fav/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/img/fav/apple-touch-icon.png">
 
     <script async defer src="https://widget.getyourguide.com/dist/pa.umd.production.min.js" data-gyg-partner-id="SSYAMZU"></script>
-    
 </head>
 <body class="">
     <!-- Google tag (gtag.js) -->
@@ -31,37 +30,171 @@
 
         gtag('config', 'G-WZQ2P8CW2Z');
     </script>
+
     <nav class="navbar navbar-expand-lg bg-white">
         <div class="container py-1">
-            <a class="navbar-brand d-flex align-items-center" href="#">
+            <a class="navbar-brand d-flex align-items-center" href="/">
                 <img src="/holidaydo-logo.png" alt="HolidayDo" class="logo">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav ms-auto me-3 gap-lg-2">
-                    <li class="nav-item"><a class="nav-link active" href="#">Destinations</a></li>
-          
-                    <li class="nav-item"><a class="nav-link" href="#">Deals</a></li>
-          
+
+                    <li class="nav-item dropdown discover-dropdown">
+                        <a class="nav-link dropdown-toggle" href="#"
+                           data-bs-toggle="dropdown"
+                           data-bs-auto-close="outside"
+                           aria-expanded="false">
+                            Discover
+                        </a>
+
+                        <div class="dropdown-menu dropdown-menu-end discover-mega-menu p-0">
+                            <div class="discover-mega-inner">
+
+                               
+                                <ul class="nav flex-column discover-region-tabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#disc-europe" type="button" role="tab">
+                                            <i class="fa-solid fa-earth-europe me-2" aria-hidden="true"></i>Europe
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#disc-africa" type="button" role="tab">
+                                            <i class="fa-solid fa-earth-africa me-2" aria-hidden="true"></i>Africa
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#disc-asia" type="button" role="tab">
+                                            <i class="fa-solid fa-earth-asia me-2" aria-hidden="true"></i>Asia
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#disc-americas" type="button" role="tab">
+                                            <i class="fa-solid fa-earth-americas me-2" aria-hidden="true"></i>Americas
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#disc-caribbean" type="button" role="tab">
+                                            <i class="fa-solid fa-umbrella-beach me-2" aria-hidden="true"></i>Caribbean
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#disc-pacific" type="button" role="tab">
+                                            <i class="fa-solid fa-earth-oceania me-2" aria-hidden="true"></i>Australia &amp; Pacific
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                
+                                <div class="tab-content discover-tab-content">
+
+                                    <div class="tab-pane fade show active" id="disc-europe" role="tabpanel">
+                                        <p class="discover-region-heading">Europe</p>
+                                        <ul class="discover-dest-list">
+                                            <li><a href="/destination/united-kingdom/60457">United Kingdom</a></li>
+                                            <li><a href="/destination/spain/67">Spain</a></li>
+                                            <li><a href="/destination/italy/57">Italy</a></li>
+                                            <li><a href="/destination/greece/53">Greece</a></li>
+                                            <li><a href="/destination/portugal/63">Portugal</a></li>
+                                            <li><a href="/destination/france/46">France</a></li>
+                                            <li><a href="/destination/switzerland/69">Switzerland</a></li>
+                                            <li><a href="/destination/turkey/70">Turkey</a></li>
+                                            <li><a href="/destination/ireland/56">Ireland</a></li>
+                                            <li><a href="/destination/iceland/55">Iceland</a></li>
+                                            <li><a href="/destination/cyprus/47">Cyprus</a></li>
+                                            <li><a href="/destination/montenegro/4475">Montenegro</a></li>
+                                        </ul>
+                                        <a href="/region/europe/6" class="discover-view-all">View all Europe destinations <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="disc-africa" role="tabpanel">
+                                        <p class="discover-region-heading">Africa</p>
+                                        <ul class="discover-dest-list">
+                                            <li><a href="/destination/morocco/825">Morocco</a></li>
+                                            <li><a href="/destination/tunisia/4393">Tunisia</a></li>
+                                            <li><a href="/destination/cape-verde/4461">Cape Verde</a></li>
+                                            <li><a href="/destination/mauritius/4463">Mauritius</a></li>
+                                            <li><a href="/destination/egypt/50">Egypt</a></li>
+                                            <li><a href="/destination/kenya/59">Kenya</a></li>
+                                        </ul>
+                                        <a href="/region/africa/1" class="discover-view-all">View all Africa destinations <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="disc-asia" role="tabpanel">
+                                        <p class="discover-region-heading">Asia</p>
+                                        <ul class="discover-dest-list">
+                                            <li><a href="/destination/japan/16">Japan</a></li>
+                                            <li><a href="/destination/thailand/20">Thailand</a></li>
+                                            <li><a href="/destination/singapore/18">Singapore</a></li>
+                                            <li><a href="/destination/sri-lanka/19">Sri Lanka</a></li>
+                                            <li><a href="/destination/indonesia/14">Indonesia</a></li>
+                                            <li><a href="/destination/vietnam/22">Vietnam</a></li>
+                                            <li><a href="/destination/india/11">India</a></li>
+                                            <li><a href="/destination/hong-kong/21">Hong Kong</a></li>
+                                        </ul>
+                                        <a href="/region/asia/2" class="discover-view-all">View all Asia destinations <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="disc-americas" role="tabpanel">
+                                        <p class="discover-region-heading">Americas</p>
+                                        <ul class="discover-dest-list">
+                                            <li><a href="/destination/usa/77">USA</a></li>
+                                            <li><a href="/destination/canada/33">Canada</a></li>
+                                            <li><a href="/destination/mexico/84">Mexico</a></li>
+                                            <li><a href="/destination/brazil/31">Brazil</a></li>
+                                            <li><a href="/destination/argentina/26">Argentina</a></li>
+                                            <li><a href="/destination/peru/64">Peru</a></li>
+                                        </ul>
+                                        <a href="/region/america/8" class="discover-view-all">View all Americas destinations <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="disc-caribbean" role="tabpanel">
+                                        <p class="discover-region-heading">Caribbean</p>
+                                        <ul class="discover-dest-list">
+                                            <li><a href="/destination/barbados/30">Barbados</a></li>
+                                            <li><a href="/destination/jamaica/58">Jamaica</a></li>
+                                            <li><a href="/destination/cuba/45">Cuba</a></li>
+                                            <li><a href="/destination/dominican-republic/48">Dominican Republic</a></li>
+                                            <li><a href="/destination/st-lucia/68">St Lucia</a></li>
+                                            <li><a href="/destination/antigua/27">Antigua</a></li>
+                                            <li><a href="/destination/aruba/28">Aruba</a></li>
+                                            <li><a href="/destination/cayman-islands/35">Cayman Islands</a></li>
+                                        </ul>
+                                        <a href="/region/Caribbean/4" class="discover-view-all">View all Caribbean destinations <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="disc-pacific" role="tabpanel">
+                                        <p class="discover-region-heading">Australia &amp; Pacific</p>
+                                        <ul class="discover-dest-list">
+                                            <li><a href="/destination/australia/25">Australia</a></li>
+                                            <li><a href="/destination/new-zealand/62">New Zealand</a></li>
+                                            <li><a href="/destination/fiji/52">Fiji</a></li>
+                                        </ul>
+                                        <a href="/region/australia/3" class="discover-view-all">View all Australia &amp; Pacific destinations <i class="bi bi-arrow-right"></i></a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
                 </ul>
-        
             </div>
-      
         </div>
     </nav>
+
     @RenderBody()
-    <footer class="bg-light pt-5 site-footer ">
+
+    <footer class="bg-light pt-5 site-footer">
         <div class="mt-4">
             <img src="/img/footer.svg" class="img-fluid w-100" loading="lazy" alt="Travel Illustration">
         </div>
     </footer>
 
-
-   
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- env: @Env.EnvironmentName -->
-    
 </body>
 </html>
