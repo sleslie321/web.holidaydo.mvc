@@ -1,4 +1,4 @@
-﻿@model List<web.holidaydo.mvc.Controllers.HomeController.TopDestination>
+﻿@model web.holidaydo.mvc.Controllers.HomeController.HomeIndexViewModel
 
 <section id="search" class="search-section">
     <div class="container">
@@ -56,9 +56,9 @@
         </div>
 
         <div class="row g-4">
-            @if (Model.Count > 0)
+            @if (Model.PopularDestinations.Count > 0)
             {
-                foreach (var tdest in Model)
+                foreach (var tdest in Model.PopularDestinations)
                 {
                     <div class="col-6 col-md-4 col-lg-3">
                         <a href="/destination/@tdest.Slug/@tdest.Id" class="text-decoration-none text-dark">
@@ -75,6 +75,133 @@
         </div>
     </div>
 </section>
+
+<section class="home-welcome position-relative overflow-hidden">
+    <div class="home-welcome-overlay"></div>
+
+    <div class="container position-relative">
+        <div class="row align-items-center min-vh-50 py-5 py-lg-6">
+            <div class="col-lg-5 text-white text-center text-lg-start home-welcome-copy">
+                <h1 class="display-4 fw-semibold mb-3">
+                    Do More on Holiday.
+                </h1>
+
+                <p class="mb-4 text-white-50">
+                    Discover tours, boat trips, water parks, family days out, city experiences,
+                    and hidden gems tailored to your next holiday.
+                </p>
+
+                <a href="#destinations" class="btn btn-warning btn-lg px-4 fw-semibold">
+                    Explore More
+                </a>
+            </div>
+
+            <div class="col-lg-7 position-relative text-center mt-0">
+                <img src="img/home/people.png"
+                     alt="Travellers planning their next holiday"
+                     class="img-fluid home-welcome-people" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="explore-world" class="explore-world-section py-5">
+    <div class="container">
+        <h2 class="explore-world-title text-center mb-4 mb-lg-5">EXPLORE THE WORLD</h2>
+
+        <div class="row justify-content-center g-4 g-lg-5">
+            <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                <a href="/region/europe/6" class="world-region-link  d-inline-block text-decoration-none">
+                    <span class="world-region-circle">
+                        <img src="/img/home/europe.png" alt="Europe" class="world-region-image" />
+                    </span>
+                    <span class="world-region-name">EUROPE</span>
+                </a>
+            </div>
+
+            <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                <a href="/region/africa/1" class="world-region-link d-inline-block text-decoration-none">
+                    <span class="world-region-circle">
+                        <img src="/img/home/africa.png" alt="Africa" class="world-region-image" />
+                    </span>
+                    <span class="world-region-name">AFRICA</span>
+                </a>
+            </div>
+
+            <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                <a href="/region/america/8" class="world-region-link d-inline-block text-decoration-none">
+                    <span class="world-region-circle">
+                        <img src="/img/home/america.png" alt="America" class="world-region-image" />
+                    </span>
+                    <span class="world-region-name">AMERICA</span>
+                </a>
+            </div>
+
+            <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                <a href="/region/south-america/9" class="world-region-link d-inline-block text-decoration-none">
+                    <span class="world-region-circle">
+                        <img src="/img/home/south-a.png" alt="South America" class="world-region-image" />
+                    </span>
+                    <span class="world-region-name">SOUTH-AMERICA</span>
+                </a>
+            </div>
+
+            <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                <a href="/region/australia/3" class="world-region-link d-inline-block text-decoration-none">
+                    <span class="world-region-circle">
+                        <img src="/img/home/australia.png" alt="Australia" class="world-region-image" />
+                    </span>
+                    <span class="world-region-name">AUSTRALIA</span>
+                </a>
+            </div>
+
+            <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                <a href="/region/asia/2" class="world-region-link d-inline-block text-decoration-none">
+                    <span class="world-region-circle">
+                        <img src="/img/home/asia.png" alt="Asia" class="world-region-image" />
+                    </span>
+                    <span class="world-region-name">ASIA</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="top-lists-section py-5 py-lg-6">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="top-list-block">
+                    <h2 class="top-list-heading">Top countries</h2>
+                    <ul class="list-inline top-link-list mb-0">
+                        @foreach (var item in Model.TopCountries)
+{
+    <li class="list-inline-item top-link-item">
+        <a href="@($"/destination/{Uri.EscapeDataString(item.Slug)}/{item.Id}")" class="top-link">@item.Title</a>
+    </li>
+}
+                    </ul>
+                </div>
+
+                <div class="top-list-block">
+                    <h2 class="top-list-heading">Top destinations</h2>
+                    <ul class="list-inline top-link-list mb-0">
+                        @foreach (var item in Model.TopDestinations)
+{
+    <li class="list-inline-item top-link-item">
+        <a href="@($"/destination/{Uri.EscapeDataString(item.Slug)}/{item.Id}")" class="top-link">@item.Title</a>
+    </li>
+}
+                    </ul>
+                </div>
+
+                
+            </div>
+        </div>
+    </div>
+</section>
+
 
 <script>
     (() => {

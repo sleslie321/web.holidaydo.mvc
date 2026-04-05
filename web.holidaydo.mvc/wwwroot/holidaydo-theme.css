@@ -593,7 +593,7 @@ a:hover {
     }
 
 .site-footer {
-    display: none !important;
+    display: block;
 }
 
 body.app-ready .site-footer {
