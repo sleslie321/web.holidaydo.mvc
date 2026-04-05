@@ -12,12 +12,30 @@ namespace web.holidaydo.mvc.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "HolidayDo - Do More on Holiday";
             ViewData["Description"] = "Discover tours, boat trips, water parks, family days out, city experiences, and hidden gems tailored to your next holiday.";
 
-            return View();
+            var client = _httpClientFactory.CreateClient();
+
+            using var response = await client.GetAsync("https://fnholidayo.azurewebsites.net/api/GetTopDestinations");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return View(new List<TopDestination>());
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+
+            var topDestinations = await JsonSerializer.DeserializeAsync<List<TopDestination>>(
+                stream,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            return View(topDestinations ?? []);
         }
 
         [HttpGet]
@@ -59,6 +77,13 @@ namespace web.holidaydo.mvc.Controllers
             public string Name { get; set; } = string.Empty;
             public string Slug { get; set; } = string.Empty;
             public string Type { get; set; } = string.Empty;
+        }
+
+        public sealed class TopDestination
+        {
+            public int Id { get; set; }
+            public string Slug { get; set; } = string.Empty;
+            public string Title { get; set; } = string.Empty;
         }
     }
 }
