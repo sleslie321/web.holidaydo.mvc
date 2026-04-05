@@ -1,0 +1,36 @@
+﻿@using web.holidaydo.mvc.Controllers
+@model DestinationController.DestinationViewModel
+@{
+    var destination = Model;
+}
+
+<h1>@ViewBag.Slug</h1>
+<h2>@ViewBag.Id</h2>
+
+@if (destination is null)
+{
+    <div class="destination-loading text-center py-5">
+        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+        <div class="mt-3 text-muted">Loading destination...</div>
+    </div>
+}
+else
+{
+    <section class="portfolio-header mb-4"
+             style="background-image: linear-gradient(rgba(8,18,32,.62), rgba(8,18,32,.62)), url('/img/destination/header.jpg');">
+        <div class="container">
+            <div class="row align-items-center portfolio-header-inner">
+                <div class="col-md-8">
+                    <h1 class="portfolio-title mb-0">
+                        @destination.Title
+                    </h1>
+                    <p class="portfolio-description">@destination.Description</p>
+                </div>
+                <div class="col-md-4" style="text-align:right !important">
+                    <h3 style="color:white">Do More on Holiday!</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
