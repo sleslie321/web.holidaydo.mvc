@@ -1,8 +1,141 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿<section id="search" class="search-section">
+    <div class="container">
+        <div class="search-card search-card--split position-relative overflow-visible">
+            <div class="row g-0 align-items-stretch">
+                <div class="col-lg-6 d-none d-lg-block">
+                    <div class="search-card-media">
+                        <img src="/img/search/search.png"
+                             alt="Holiday travellers"
+                             class="search-card-image" />
+                    </div>
+                </div>
 
-<div class="text-center">
-    <h1 class="display-4">Hello</h1>
-    
-</div>
+                <div class="col-lg-6">
+                    <div class="search-card-content">
+                        <h2 class="search-card-title mb-3">
+                            Find your next place to explore
+                        </h2>
+
+                        <p class="search-card-subtitle mb-4">
+                            Search cities, counties, and destinations to jump straight to the best activities and deals.
+                        </p>
+
+                        <div class="search-autocomplete position-relative">
+                            <label for="destination-search" class="form-label fw-semibold search-label">Destination</label>
+
+                            <div class="input-group input-group-lg search-input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-geo-alt"></i>
+                                </span>
+
+                                <input id="destination-search"
+                                       type="text"
+                                       class="form-control border-start-0"
+                                       placeholder="Where do you want to go?"
+                                       autocomplete="off" />
+                            </div>
+
+                            <div id="destination-suggestions"
+                                 class="list-group position-absolute w-100 search-autocomplete-menu d-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    (() => {
+        const input = document.getElementById("destination-search");
+        const suggestions = document.getElementById("destination-suggestions");
+        let abortController = null;
+
+        function hideSuggestions() {
+            suggestions.classList.add("d-none");
+            suggestions.innerHTML = "";
+        }
+
+        function renderSuggestions(items) {
+            if (!items || items.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestions.innerHTML = "";
+
+            for (const item of items) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+
+                const name = document.createElement("span");
+                name.textContent = item.name ?? "";
+
+                const type = document.createElement("small");
+                type.className = "text-secondary";
+                type.textContent = item.type ?? "";
+
+                button.appendChild(name);
+                button.appendChild(type);
+
+                button.addEventListener("click", () => {
+                    input.value = item.name ?? "";
+                    hideSuggestions();
+
+                    if (item.slug && item.id) {
+                        window.location.href = `/destination/${item.slug}/${item.id}`;
+                    }
+                });
+
+                suggestions.appendChild(button);
+            }
+
+            suggestions.classList.remove("d-none");
+        }
+
+        async function loadSuggestions(query) {
+            if (abortController) {
+                abortController.abort();
+            }
+
+            abortController = new AbortController();
+
+            try {
+                const response = await fetch(`/Home/Autocomplete?q=${encodeURIComponent(query)}&take=10`, {
+                    signal: abortController.signal
+                });
+
+                if (!response.ok) {
+                    hideSuggestions();
+                    return;
+                }
+
+                const items = await response.json();
+                renderSuggestions(items);
+            } catch (error) {
+                if (error.name !== "AbortError") {
+                    hideSuggestions();
+                }
+            }
+        }
+
+        input.addEventListener("input", async (e) => {
+            const query = e.target.value.trim();
+
+            if (query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            await loadSuggestions(query);
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                hideSuggestions();
+            }
+        });
+    })();
+</script>
