@@ -1,38 +1,8 @@
 [
-  {
-    "id": 6,
-    "slug": "europe",
-    "title": "Europe",
-    "description": "Europe is a continent where history, culture and unforgettable experiences come together. From the iconic streets of Paris and Rome to the beaches of Barcelona and the canals of Amsterdam, every destination offers something unique—perfect for city breaks, food lovers and adventure seekers alike."
-  },
-  {
-    "id": 1,
-    "slug": "africa",
-    "title": "Africa",
-    "description": "Africa is a continent of breathtaking landscapes, rich cultures and unforgettable adventures. From the iconic plains of Serengeti and the majestic Victoria Falls to vibrant cities like Cape Town and Marrakech, every journey offers something extraordinary—perfect for wildlife lovers, explorers and those seeking something truly different."
-  },
-  {
-    "id": 8,
-    "slug": "america",
-    "title": "America",
-    "description": "America is a land of vast landscapes, vibrant cities and endless adventure. From the bright lights of New York and the beaches of Miami to natural wonders like the Grand Canyon and Niagara Falls, every destination offers something unique—perfect for road trips, city breaks and unforgettable experiences."
-  },
-  {
-    "id": 9,
-    "slug": "south-america",
-    "title": "South America",
-    "description": "South America is a continent of vibrant culture, dramatic landscapes and unforgettable adventures. From the iconic Machu Picchu and the vast Amazon Rainforest to lively cities like Rio de Janeiro and Buenos Aires, every journey offers something unique—perfect for explorers, food lovers and culture seekers alike."
-  },
-  {
-    "id": 3,
-    "slug": "australia",
-    "title": "Australia",
-    "description": "Australia is a land of stunning coastlines, unique wildlife and laid-back cities. From the iconic Sydney Opera House and vibrant Melbourne to natural wonders like the Great Barrier Reef and Uluru, every journey offers something unforgettable—perfect for adventure, relaxation and exploration."
-  },
-  {
-    "id": 2,
-    "slug": "asia",
-    "title": "Asia",
-    "description": "Asia is a continent of rich traditions, vibrant cities and incredible diversity. From the futuristic skyline of Tokyo and the bustling streets of Bangkok to wonders like the Great Wall of China and the beauty of Bali, every journey offers something unique—perfect for culture, cuisine and adventure."
-  }
+  { "id": 1, "slug": "africa", "title": "Africa", "description": "Discover the wild, diverse and breathtaking continent of Africa, from safari adventures to ancient wonders." },
+  { "id": 2, "slug": "asia", "title": "Asia", "description": "Explore the vast and vibrant cultures, iconic landscapes and incredible cuisines of Asia." },
+  { "id": 3, "slug": "australia", "title": "Australia & Pacific", "description": "From the Great Barrier Reef to Uluru, Australia and the Pacific offer adventures like no other." },
+  { "id": 6, "slug": "europe", "title": "Europe", "description": "Discover Europe's rich history, stunning architecture and world-class cuisine across dozens of countries." },
+  { "id": 8, "slug": "america", "title": "North America", "description": "From New York City to the Rocky Mountains, North America has extraordinary experiences for every traveller." },
+  { "id": 9, "slug": "south-america", "title": "South America", "description": "Explore the Amazon rainforest, Machu Picchu and the vibrant cities of South America." }
 ]

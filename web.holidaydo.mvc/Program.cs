@@ -24,6 +24,11 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllerRoute(
+    name: "region",
+    pattern: "region/{slug}/{id}",
+    defaults: new { controller = "Region", action = "Index" });
+
+app.MapControllerRoute(
     name: "destination",
     pattern: "destination/{slug}/{id}",
     defaults: new { controller = "Destination", action = "Index" });

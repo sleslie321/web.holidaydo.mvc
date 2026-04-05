@@ -1,0 +1,141 @@
+﻿@using web.holidaydo.mvc.Controllers
+@model RegionController.RegionViewModel
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="container py-4">
+        <p class="text-danger">@Model.ErrorMessage</p>
+    </div>
+}
+else if (Model.Regions.Count == 0)
+{
+    <div class="container py-4">
+        <p>No data found.</p>
+    </div>
+}
+else
+{
+    <section class="portfolio-header mb-4"
+             style="background-image: linear-gradient(rgba(8,18,32,.62), rgba(8,18,32,.62)), url('/img/destination/header.jpg');">
+        <div class="container">
+            <div class="row align-items-center portfolio-header-inner">
+                <div class="col-md-8">
+                    <h1 class="portfolio-title mb-0">@Model.Title</h1>
+                    <p class="portfolio-description">@Model.Description</p>
+                </div>
+                <div class="col-md-4" style="text-align:right !important">
+                    <h3 style="color:white">Do More on Holiday!</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container py-4">
+        <div class="region-tree-wrap">
+            <ul class="region-tree mb-0">
+                @foreach (var item in Model.Regions)
+                {
+                    <li class="region-tree-item">
+                        <a class="region-tree-link" href="/destination/@item.Slug/@item.DestinationId" title="@item.Name">
+                            <i class="@GetIconClass(item.Type) region-icon" aria-hidden="true"></i>
+                            <span class="region-name">@item.Name</span>
+                        </a>
+
+                        @if (item.Children.Count > 0)
+                        {
+                            <ul class="region-tree level-2">
+                                @foreach (var child in item.Children)
+                                {
+                                    <li class="region-tree-item">
+                                        <a class="region-tree-link" href="/destination/@child.Slug/@child.DestinationId" title="@child.Name">
+                                            <i class="@GetIconClass(child.Type) region-icon" aria-hidden="true"></i>
+                                            <span class="region-name">@child.Name</span>
+                                        </a>
+
+                                        @if (child.Children.Count > 0)
+                                        {
+                                            <ul class="region-tree level-3">
+                                                @foreach (var grandChild in child.Children)
+                                                {
+                                                    <li class="region-tree-item">
+                                                        <a class="region-tree-link" href="/destination/@grandChild.Slug/@grandChild.DestinationId" title="@grandChild.Name">
+                                                            <i class="@GetIconClass(grandChild.Type) region-icon" aria-hidden="true"></i>
+                                                            <span class="region-name">@grandChild.Name</span>
+                                                        </a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="spacer-small"></div>
+    </div>
+
+    <section id="explore-world" class="explore-world-section py-5">
+        <div class="container">
+            <h2 class="explore-world-title text-center mb-4 mb-lg-5">EXPLORE THE WORLD</h2>
+            <div class="row justify-content-center g-4 g-lg-5">
+                <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                    <a href="/region/europe/6" class="world-region-link d-inline-block text-decoration-none">
+                        <span class="world-region-circle">
+                            <img src="/img/home/europe.png" alt="Europe" class="world-region-image" />
+                        </span>
+                        <span class="world-region-name">EUROPE</span>
+                    </a>
+                </div>
+                <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                    <a href="/region/africa/1" class="world-region-link d-inline-block text-decoration-none">
+                        <span class="world-region-circle">
+                            <img src="/img/home/africa.png" alt="Africa" class="world-region-image" />
+                        </span>
+                        <span class="world-region-name">AFRICA</span>
+                    </a>
+                </div>
+                <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                    <a href="/region/america/8" class="world-region-link d-inline-block text-decoration-none">
+                        <span class="world-region-circle">
+                            <img src="/img/home/america.png" alt="America" class="world-region-image" />
+                        </span>
+                        <span class="world-region-name">AMERICA</span>
+                    </a>
+                </div>
+                <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                    <a href="/region/south-america/9" class="world-region-link d-inline-block text-decoration-none">
+                        <span class="world-region-circle">
+                            <img src="/img/home/south-a.png" alt="South America" class="world-region-image" />
+                        </span>
+                        <span class="world-region-name">SOUTH-AMERICA</span>
+                    </a>
+                </div>
+                <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                    <a href="/region/australia/3" class="world-region-link d-inline-block text-decoration-none">
+                        <span class="world-region-circle">
+                            <img src="/img/home/australia.png" alt="Australia" class="world-region-image" />
+                        </span>
+                        <span class="world-region-name">AUSTRALIA</span>
+                    </a>
+                </div>
+                <div class="col-6 col-sm-4 col-md-4 col-lg-2 text-center">
+                    <a href="/region/asia/2" class="world-region-link d-inline-block text-decoration-none">
+                        <span class="world-region-circle">
+                            <img src="/img/home/asia.png" alt="Asia" class="world-region-image" />
+                        </span>
+                        <span class="world-region-name">ASIA</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@functions {
+    static string GetIconClass(string? type) =>
+        RegionController.GetIconClass(type);
+}
