@@ -1,4 +1,5 @@
 ﻿@using web.holidaydo.mvc.Controllers
+@using web.holidaydo.mvc.Models
 @model DestinationController.DestinationViewModel
 @{
     var destination = Model;
@@ -32,5 +33,149 @@ else
             </div>
         </div>
     </section>
+
+    @if (destination.SearchProducts?.Products.Any() == true)
+    {
+        <section id="destination-widget" class="py-2 bg-hd-light">
+            <div class="container py-4">
+                <div class="row g-4">
+                    @foreach (Product product in destination.SearchProducts.Products)
+                    {
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="tour-card">
+                                <div class="image-wrap">
+                                    @if (product.Flags != null && product.Flags.Contains("LIKELY_TO_SELL_OUT"))
+                                    {
+                                        <span class="special-offer">Likely to sell out</span>
+                                    }
+                                    <img src="@product.Images?.FirstOrDefault()?.Variants?[1].Url" alt="@product.Title">
+                                </div>
+
+                                <div class="pt-2 tour-card-body">
+                                    <div class="rating-line">
+                                        Average rating: @FormatRating(product.Reviews?.CombinedAverageRating)
+                                        <i class="bi bi-star-fill star"></i>
+                                        from @product.Reviews?.TotalReviews reviews
+                                    </div>
+
+                                    <div class="tour-title">
+                                        <a href="@product.ProductUrl" target="_blank" title="@product.Title">
+                                            @product.Title
+                                        </a>
+                                    </div>
+
+                                    @if (product.Flags?.Any() == true)
+                                    {
+                                        @foreach (var flag in product.Flags)
+                                        {
+                                            <div class="meta-line">
+                                                <i class="bi bi-check-circle"></i>
+                                                <div class="flags-list">
+                                                    <span class="flag-item">@FormatFlag(flag)</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+
+                                    <div class="meta-line">
+                                        <i class="bi bi-clock"></i>
+                                        @if (product.Duration?.FixedDurationInMinutes != null)
+                                        {
+                                            <span>@FormatDuration(product.Duration.FixedDurationInMinutes, true)</span>
+                                        }
+                                        @if (product.Duration?.VariableDurationFromMinutes != null)
+                                        {
+                                            <span>@FormatDuration(product.Duration?.VariableDurationFromMinutes, false) - @FormatDuration(product.Duration?.VariableDurationToMinutes, true)</span>
+                                        }
+                                    </div>
+
+                                    <div class="price-line">
+                                        <span class="from">from</span><span class="price-new">£@product.Pricing?.Summary?.FromPrice</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    @if (destination.Extra?.DealApiUrl != null && destination.Deals?.Any() == true)
+    {
+        <section id="topdeals" class="py-2">
+            <div class="container">
+                <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+                    <div>
+                        <h2 class="section-title mb-2">Top deals in @destination.Title</h2>
+                        <p class="text-secondary mb-0">Grab yourself a deal - changing daily!</p>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    @foreach (var deal in destination.Deals!.Take(3))
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <div class="card h-100">
+                                <div class="card-body p-4">
+                                    @if (deal.DiscountPercentageIncludingAdminFee is > 0)
+                                    {
+                                        <span class="badge-soft badge-soft-blue mb-3">Save up to @deal.DiscountPercentageIncludingAdminFee%</span>
+                                    }
+                                    <h3 class="h5 fw-bold"><a href="@deal.UrlPath" target="_blank">@deal.Headline</a></h3>
+                                    <p class="text-secondary">@deal.Title</p>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <small class="text-secondary">
+                                            From <strong class="text-dark">£@deal.Price</strong>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    @if (destination.Extra?.GetId != null)
+    {
+        <section id="activities" class="py-2 bg-hd-light">
+            <div class="container">
+                <h2>Top activities in @destination.Title</h2>
+                <div data-gyg-href="https://widget.getyourguide.com/default/activities.frame"
+                     data-gyg-location-id="@destination.Extra.GetId"
+                     data-gyg-locale-code="en-US"
+                     data-gyg-widget="activities"
+                     data-gyg-number-of-items="12"
+                     data-gyg-partner-id="SSYAMZU"></div>
+            </div>
+        </section>
+    }
+    else
+    {
+        <section id="activities" class="py-2 bg-hd-light">
+            <div class="container">
+                <h2>Top activities in @destination.Title</h2>
+                <div data-gyg-widget="auto" data-gyg-partner-id="SSYAMZU"></div>
+            </div>
+        </section>
+    }
+
+    <section id="longdescription" class="py-2 bg-hd-light">
+        <div class="container">
+            <p>@Html.Raw(destination.LongDescription ?? string.Empty)</p>
+        </div>
+    </section>
+}
+
+@functions {
+    static string FormatFlag(string? flag) =>
+        DestinationController.FormatFlag(flag);
+
+    static string FormatDuration(int? minutes, bool showUnit) =>
+        DestinationController.FormatDuration(minutes, showUnit);
+
+    static string FormatRating(double? rating) =>
+        DestinationController.FormatRating(rating); 
 }
 

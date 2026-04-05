@@ -1,53 +1,128 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using web.holidaydo.mvc.Models;
+using web.holidaydo.mvc.Services;
 
 namespace web.holidaydo.mvc.Controllers
 {
     public class DestinationController : Controller
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private static readonly JsonSerializerOptions JsonOptions =
+            new() { PropertyNameCaseInsensitive = true };
 
-        public DestinationController(IHttpClientFactory httpClientFactory)
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly WowcherService _wowcherService;
+
+        public DestinationController(IHttpClientFactory httpClientFactory, WowcherService wowcherService)
         {
             _httpClientFactory = httpClientFactory;
+            _wowcherService = wowcherService;
         }
 
         public async Task<IActionResult> Index(string slug, int id)
         {
             var client = _httpClientFactory.CreateClient();
-            var url = $"https://fnholidayo.azurewebsites.net/api/destinations/{slug}";
 
-            using var response = await client.GetAsync(url);
+            // Fire both requests simultaneously
+            var destinationFetch = client.GetAsync(
+                $"https://fnholidayo.azurewebsites.net/api/destinations/{slug}");
 
-            if (!response.IsSuccessStatusCode)
-            {
+            var productsFetch = id > 0
+                ? client.GetAsync($"https://fnholidayo.azurewebsites.net/api/SearchProducts?vid={id}")
+                : null;
+
+            using var destinationResponse = await destinationFetch;
+
+            if (!destinationResponse.IsSuccessStatusCode)
                 return View((DestinationViewModel?)null);
-            }
 
-            await using var stream = await response.Content.ReadAsStreamAsync();
+            await using var destinationStream = await destinationResponse.Content.ReadAsStreamAsync();
             var apiResponse = await JsonSerializer.DeserializeAsync<DestinationApiResponse>(
-                stream,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                destinationStream, JsonOptions);
 
             if (apiResponse is null)
-            {
                 return View((DestinationViewModel?)null);
+
+            // Parse products
+            SearchProductsResponse? searchProducts = null;
+            if (productsFetch is not null)
+            {
+                using var productsResponse = await productsFetch;
+                if (productsResponse.IsSuccessStatusCode)
+                {
+                    await using var productsStream = await productsResponse.Content.ReadAsStreamAsync();
+                    searchProducts = await JsonSerializer.DeserializeAsync<SearchProductsResponse>(
+                        productsStream, JsonOptions);
+                }
             }
+
+            // Fetch Wowcher deals
+            List<CityBreakDeal>? deals = null;
+            if (apiResponse.Extra?.DealApiUrl is not null)
+                deals = await _wowcherService.GetDestinationDealsAsync(apiResponse.Extra.DealApiUrl);
+
+            var title = apiResponse.Meta?.Name ?? apiResponse.Destination?.Name ?? FormatSlug(slug);
+
+            ViewData["Title"]       = $"Holiday Activities for {title} - Do More on Holiday";
+            ViewData["Description"] = $"{apiResponse.Meta?.Summary} - {title}";
 
             var viewModel = new DestinationViewModel
             {
-                Title       = apiResponse.Meta?.Name ?? apiResponse.Destination?.Name ?? slug,
-                Description = apiResponse.Meta?.Summary,
-                Content     = apiResponse.Meta?.Content,
-                Slug        = slug,
-                Id          = id,
-                Destination = apiResponse.Destination,
-                Meta        = apiResponse.Meta,
-                Extra       = apiResponse.Extra
+                Title           = title,
+                Description     = apiResponse.Meta?.Summary,
+                LongDescription = apiResponse.Meta?.Content,
+                Slug            = slug,
+                Id              = id,
+                Extra           = apiResponse.Extra,
+                SearchProducts  = searchProducts,
+                Deals           = deals
             };
 
             return View(viewModel);
         }
+
+        public static string FormatSlug(string? slug)
+        {
+            if (string.IsNullOrWhiteSpace(slug)) return "Destinations";
+            return string.Join(" ", slug.Split('-')
+                .Select(w => char.ToUpper(w[0]) + w[1..]));
+        }
+
+        public static string FormatFlag(string? flag)
+        {
+            if (string.IsNullOrWhiteSpace(flag)) return string.Empty;
+            flag = flag.Replace('_', ' ').ToLowerInvariant();
+            return char.ToUpper(flag[0]) + flag[1..];
+        }
+
+        public static string FormatDuration(int? minutes, bool showUnit)
+        {
+            if (minutes is null or <= 0) return string.Empty;
+
+            if (!showUnit)
+            {
+                return minutes < 60
+                    ? minutes.Value.ToString()
+                    : (minutes.Value / 60).ToString();
+            }
+
+            if (minutes < 60)
+                return $"{minutes} minute{(minutes == 1 ? "" : "s")}";
+            
+            var hours = minutes.Value / 60;
+            var mins  = minutes.Value % 60;
+
+            return mins == 0
+                ? $"{hours} hour{(hours == 1 ? "" : "s")}"
+                : $"{hours} hour{(hours == 1 ? "" : "s")} {mins} minute{(mins == 1 ? "" : "s")}";
+        }
+
+        public static string FormatRating(double? rating) =>
+            rating is null
+                ? string.Empty
+                : rating.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+
+        // ── Inner models ────────────────────────────────────────────────────────
 
         public sealed class DestinationApiResponse
         {
@@ -82,7 +157,7 @@ namespace web.holidaydo.mvc.Controllers
         public sealed class DestinationExtra
         {
             public string? DealApiUrl { get; set; }
-            public int GetId { get; set; }
+            public int? GetId { get; set; }
             public bool Image { get; set; }
         }
 
@@ -90,12 +165,12 @@ namespace web.holidaydo.mvc.Controllers
         {
             public string Title { get; init; } = string.Empty;
             public string? Description { get; init; }
-            public string? Content { get; init; }
+            public string? LongDescription { get; init; }
             public string Slug { get; init; } = string.Empty;
             public int Id { get; init; }
-            public DestinationData? Destination { get; init; }
-            public DestinationMeta? Meta { get; init; }
             public DestinationExtra? Extra { get; init; }
+            public SearchProductsResponse? SearchProducts { get; init; }
+            public List<CityBreakDeal>? Deals { get; init; }
         }
     }
 }
