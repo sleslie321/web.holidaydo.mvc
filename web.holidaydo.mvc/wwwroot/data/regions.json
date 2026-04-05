@@ -4,5 +4,17 @@
   { "id": 3, "slug": "australia", "title": "Australia & Pacific", "description": "From the Great Barrier Reef to Uluru, Australia and the Pacific offer adventures like no other." },
   { "id": 6, "slug": "europe", "title": "Europe", "description": "Discover Europe's rich history, stunning architecture and world-class cuisine across dozens of countries." },
   { "id": 8, "slug": "america", "title": "North America", "description": "From New York City to the Rocky Mountains, North America has extraordinary experiences for every traveller." },
-  { "id": 9, "slug": "south-america", "title": "South America", "description": "Explore the Amazon rainforest, Machu Picchu and the vibrant cities of South America." }
+  {
+    "id": 9,
+    "slug": "south-america",
+    "title": "South America",
+    "description": "Explore the Amazon rainforest, Machu Picchu and the vibrant cities of South America."
+  },
+  {
+    "id": 4,
+    "slug": "caribbean",
+    "title": "Caribbean",
+    "description": "The Caribbean is a tropical paradise of turquoise waters, white-sand beaches and laid-back island charm. From vibrant destinations like Havana and Bridgetown to natural beauty in St Lucia and Jamaica, every island offers something unique—perfect for relaxation, adventure and sun-soaked escapes."
+  }
+
 ]
