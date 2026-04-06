@@ -49,6 +49,13 @@ namespace web.holidaydo.mvc.Controllers
                         new XElement(ns + "changefreq", "weekly"),
                         new XElement(ns + "priority",   "1.0")));
 
+                urlset.Add(
+                    new XElement(ns + "url",
+                        new XElement(ns + "loc", "https://www.holidaydo.com/all-destinations"),
+                        new XElement(ns + "lastmod", DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")),
+                        new XElement(ns + "changefreq", "monthly"),
+                        new XElement(ns + "priority", "1.0")));
+
                 var regionsPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", "regions.json");
                 if (System.IO.File.Exists(regionsPath))
                 {
