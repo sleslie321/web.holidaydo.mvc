@@ -1,0 +1,14 @@
+﻿User-agent: *
+Allow: /
+
+# Block technical / non-SEO areas
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_framework/
+Disallow: /_content/
+Disallow: /bin/
+Disallow: /obj/
+
+
+# Sitemap
+Sitemap: https://www.holidaydo.com/sitemap.xml
