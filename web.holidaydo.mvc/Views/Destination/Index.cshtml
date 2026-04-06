@@ -1,4 +1,5 @@
-﻿@using web.holidaydo.mvc.Controllers
+﻿@using System.Net
+@using web.holidaydo.mvc.Controllers
 @using web.holidaydo.mvc.Models
 @model DestinationController.DestinationViewModel
 @{
@@ -121,7 +122,13 @@ else
                                     {
                                         <span class="badge-soft badge-soft-blue mb-3">Save up to @deal.DiscountPercentageIncludingAdminFee%</span>
                                     }
-                                    <h3 class="h5 fw-bold"><a href="@deal.UrlPath" target="_blank">@deal.Headline</a></h3>
+                                    @{
+                                      var originalUrl = "https://www.wowcher.co.uk/"+@deal.UrlPath;
+   
+                                      var affiliateUrl =
+                                            $"https://www.awin1.com/cread.php?awinmid=3595&awinaffid=5819&ued={WebUtility.UrlEncode(originalUrl)}";
+                                    }
+                                    <h3 class="h5 fw-bold"><a href="@affiliateUrl" target="_blank" rel="noopener noreferrer">@deal.Headline</a></h3>
                                     <p class="text-secondary">@deal.Title</p>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <small class="text-secondary">
