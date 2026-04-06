@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using Azure;
 using Azure.Data.Tables;
@@ -12,10 +14,15 @@ namespace web.holidaydo.mvc.Controllers
 
         private readonly TableClient _tableClient;
         private readonly ILogger<SitemapController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public SitemapController(IConfiguration configuration, ILogger<SitemapController> logger)
+        public SitemapController(
+            IConfiguration configuration,
+            ILogger<SitemapController> logger,
+            IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
 
             var connectionString = configuration["AzureWebJobsStorage"];
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -34,6 +41,33 @@ namespace web.holidaydo.mvc.Controllers
 
                 var urlset = new XElement(ns + "urlset");
                 var seen   = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                urlset.Add(
+                    new XElement(ns + "url",
+                        new XElement(ns + "loc",        BaseUrl),
+                        new XElement(ns + "lastmod",    "2026-04-06"),
+                        new XElement(ns + "changefreq", "weekly"),
+                        new XElement(ns + "priority",   "1.0")));
+
+                var regionsPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", "regions.json");
+                if (System.IO.File.Exists(regionsPath))
+                {
+                    await using var stream = System.IO.File.OpenRead(regionsPath);
+                    var regions = await JsonSerializer.DeserializeAsync<List<RegionItem>>(stream)
+                                  ?? [];
+
+                    foreach (var region in regions)
+                    {
+                        var loc = $"{BaseUrl}/region/{Uri.EscapeDataString(region.Slug)}/{region.Id}";
+
+                        urlset.Add(
+                            new XElement(ns + "url",
+                                new XElement(ns + "loc",        loc),
+                                new XElement(ns + "lastmod",    "2026-04-06"),
+                                new XElement(ns + "changefreq", "monthly"),
+                                new XElement(ns + "priority",   "0.5")));
+                    }
+                }
 
                 await foreach (var entity in _tableClient.QueryAsync<TableEntity>(
                     select: ["RowKey", "Slug"]))
@@ -76,5 +110,9 @@ namespace web.holidaydo.mvc.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
+
+        private sealed record RegionItem(
+            [property: JsonPropertyName("id")] int Id,
+            [property: JsonPropertyName("slug")] string Slug);
     }
 }
