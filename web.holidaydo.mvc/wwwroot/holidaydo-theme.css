@@ -1336,3 +1336,26 @@ body.app-ready .site-footer {
         columns: 2;
     }
 }
+
+/* Flights section */
+.flights-section {
+    background: #e6e9ec;
+}
+
+.flights-title {
+    font-size: clamp(2rem, 4vw, 4rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: #2f3237;
+    margin: 0;
+}
+
+.flights-title-dot {
+    color: #f15d3e;
+}
+
+.flights-collage {
+    width: 100%;
+    height: auto;
+    display: block;
+}
