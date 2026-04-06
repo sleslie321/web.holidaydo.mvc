@@ -1,11 +1,16 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace web.holidaydo.mvc.Controllers
 {
     public class HomeController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _memoryCache;
+
+        private const string IndexCacheKey = "home_index_cache";
+        private const int CacheDurationMinutes = 60;
 
         private static readonly TopCountryLink[] TopCountries =
         [
@@ -54,15 +59,22 @@ namespace web.holidaydo.mvc.Controllers
             new() { Title = "Copenhagen", Slug = "copenhagen", Id = 463 }
         ];
 
-        public HomeController(IHttpClientFactory httpClientFactory)
+        public HomeController(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
         {
             _httpClientFactory = httpClientFactory;
+            _memoryCache = memoryCache;
         }
 
         public async Task<IActionResult> Index()
         {
-            ViewData["Title"] = "HolidayDo - Do More on Holiday";
-            ViewData["Description"] = "Discover tours, boat trips, water parks, family days out, city experiences, and hidden gems tailored to your next holiday.";
+            // Check if data is in cache
+            if (_memoryCache.TryGetValue(IndexCacheKey, out HomeIndexViewModel? cachedModel))
+            {
+                return View(cachedModel);
+            }
+
+                ViewData["Title"] = "HolidayDo - Do More on Holiday";
+                ViewData["Description"] = "Discover tours, boat trips, water parks, family days out, city experiences, and hidden gems tailored to your next holiday.";
 
             var client = _httpClientFactory.CreateClient();
 
@@ -89,6 +101,12 @@ namespace web.holidaydo.mvc.Controllers
                 TopDestinations = TopDestinations
             };
 
+            // Cache the result for 60 minutes
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheDurationMinutes));
+
+            _memoryCache.Set(IndexCacheKey, model, cacheOptions);
+
             return View(model);
         }
 
@@ -98,6 +116,14 @@ namespace web.holidaydo.mvc.Controllers
             if (string.IsNullOrWhiteSpace(q))
             {
                 return Json(Array.Empty<object>());
+            }
+
+            // Create cache key based on query
+            var cacheKey = $"autocomplete_{q}_{take}";
+
+            if (_memoryCache.TryGetValue(cacheKey, out List<DestinationSuggestion>? cachedResults))
+            {
+                return Json(cachedResults ?? []);
             }
 
             var client = _httpClientFactory.CreateClient();
@@ -120,6 +146,12 @@ namespace web.holidaydo.mvc.Controllers
                 {
                     PropertyNameCaseInsensitive = true
                 });
+
+            // Cache autocomplete results for 60 minutes
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheDurationMinutes));
+
+            _memoryCache.Set(cacheKey, results ?? [], cacheOptions);
 
             return Json(results ?? []);
         }

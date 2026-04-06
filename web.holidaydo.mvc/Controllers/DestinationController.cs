@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using web.holidaydo.mvc.Models;
 using web.holidaydo.mvc.Services;
 
@@ -12,16 +13,31 @@ namespace web.holidaydo.mvc.Controllers
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly WowcherService _wowcherService;
+        private readonly IMemoryCache _memoryCache;
 
-        public DestinationController(IHttpClientFactory httpClientFactory, WowcherService wowcherService)
+        private const int CacheDurationMinutes = 15;
+
+        public DestinationController(
+            IHttpClientFactory httpClientFactory,
+            WowcherService wowcherService,
+            IMemoryCache memoryCache)
         {
             _httpClientFactory = httpClientFactory;
             _wowcherService = wowcherService;
+            _memoryCache = memoryCache;
         }
 
         public async Task<IActionResult> Index(string slug, int id)
         {
-            
+            // Create cache key based on slug and id
+            var cacheKey = $"destination_{slug}_{id}";
+
+            // Check if data is in cache
+            if (_memoryCache.TryGetValue(cacheKey, out DestinationViewModel? cachedViewModel))
+            {
+                return View(cachedViewModel);
+            }
+
             var client = _httpClientFactory.CreateClient();
 
             // Fire both requests simultaneously
@@ -80,8 +96,13 @@ namespace web.holidaydo.mvc.Controllers
             };
 
             ViewData["Title"] = "Find Great Activites for " + viewModel.Title + " | HolidayDo - Do More on Holiday";
-            ViewData["Description"] =  viewModel.Description;
+            ViewData["Description"] = viewModel.Description;
 
+            // Cache the result for 15 minutes
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheDurationMinutes));
+
+            _memoryCache.Set(cacheKey, viewModel, cacheOptions);
 
             return View(viewModel);
         }

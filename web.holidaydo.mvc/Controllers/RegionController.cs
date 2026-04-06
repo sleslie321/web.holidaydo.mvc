@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace web.holidaydo.mvc.Controllers
 {
@@ -10,15 +11,31 @@ namespace web.holidaydo.mvc.Controllers
 
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IWebHostEnvironment _env;
+        private readonly IMemoryCache _memoryCache;
 
-        public RegionController(IHttpClientFactory httpClientFactory, IWebHostEnvironment env)
+        private const int CacheDurationMinutes = 60;
+
+        public RegionController(
+            IHttpClientFactory httpClientFactory,
+            IWebHostEnvironment env,
+            IMemoryCache memoryCache)
         {
             _httpClientFactory = httpClientFactory;
             _env = env;
+            _memoryCache = memoryCache;
         }
 
         public async Task<IActionResult> Index(string slug, int id)
         {
+            // Create cache key based on slug and id
+            var cacheKey = $"region_{slug}_{id}";
+
+            // Check if data is in cache
+            if (_memoryCache.TryGetValue(cacheKey, out RegionViewModel? cachedViewModel))
+            {
+                return View(cachedViewModel);
+            }
+
             var lookup = await ReadRegionsJsonAsync();
             var match  = lookup.FirstOrDefault(x => x.Id == id);
 
@@ -49,7 +66,7 @@ namespace web.holidaydo.mvc.Controllers
                 errorMessage = $"Failed to load region data: {ex.Message}";
             }
 
-            return View(new RegionViewModel
+            var viewModel = new RegionViewModel
             {
                 Title        = title,
                 Description  = description,
@@ -57,7 +74,15 @@ namespace web.holidaydo.mvc.Controllers
                 Id           = id,
                 Regions      = regions,
                 ErrorMessage = errorMessage
-            });
+            };
+
+            // Cache the result for 60 minutes
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheDurationMinutes));
+
+            _memoryCache.Set(cacheKey, viewModel, cacheOptions);
+
+            return View(viewModel);
         }
 
         private async Task<List<RegionLookup>> ReadRegionsJsonAsync()

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace web.holidaydo.mvc.Controllers
 {
@@ -10,15 +11,21 @@ namespace web.holidaydo.mvc.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<All_destinationsController> _logger;
+        private readonly IMemoryCache _memoryCache;
+
+        private const string CacheKey = "all_destinations_cache";
+        private const int CacheDurationMinutes = 60;
 
         public All_destinationsController(
             IWebHostEnvironment webHostEnvironment,
             IHttpClientFactory httpClientFactory,
-            ILogger<All_destinationsController> logger)
+            ILogger<All_destinationsController> logger,
+            IMemoryCache memoryCache)
         {
             _webHostEnvironment = webHostEnvironment;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         public async Task<IActionResult> Index()
@@ -28,6 +35,13 @@ namespace web.holidaydo.mvc.Controllers
 
             try
             {
+                // Check if data is in cache
+                if (_memoryCache.TryGetValue(CacheKey, out List<RegionWithCountries>? cachedRegions))
+                {
+                    _logger.LogInformation("Returning cached all destinations data");
+                    return View(cachedRegions);
+                }
+
                 var regionsPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", "regions.json");
                 List<RegionItem> regions = [];
 
@@ -59,7 +73,6 @@ namespace web.holidaydo.mvc.Controllers
                         {
                             var content = await response.Content.ReadAsStringAsync();
                             
-                            // Debug logging
                             _logger.LogInformation($"API Response for region {region.Id}: {content}");
                             
                             countries = JsonSerializer.Deserialize<List<Country>>(
@@ -79,6 +92,13 @@ namespace web.holidaydo.mvc.Controllers
                         _logger.LogError(ex, $"Failed to fetch countries for region {region.Id}");
                     }
                 }
+
+                // Cache the result for 60 minutes
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheDurationMinutes));
+
+                _memoryCache.Set(CacheKey, regionsWithCountries, cacheOptions);
+                _logger.LogInformation($"All destinations data cached for {CacheDurationMinutes} minutes");
 
                 return View(regionsWithCountries);
             }

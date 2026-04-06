@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Azure;
 using Azure.Data.Tables;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace web.holidaydo.mvc.Controllers
 {
@@ -11,18 +12,23 @@ namespace web.holidaydo.mvc.Controllers
     {
         private const string TableName = "TableDestinations";
         private const string BaseUrl   = "https://www.holidaydo.com";
+        private const string CacheKey = "sitemap_xml_cache";
+        private const int CacheDurationMinutes = 60;
 
         private readonly TableClient _tableClient;
         private readonly ILogger<SitemapController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IMemoryCache _memoryCache;
 
         public SitemapController(
             IConfiguration configuration,
             ILogger<SitemapController> logger,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            IMemoryCache memoryCache)
         {
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
+            _memoryCache = memoryCache;
 
             var connectionString = configuration["AzureWebJobsStorage"];
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -34,6 +40,13 @@ namespace web.holidaydo.mvc.Controllers
         [HttpGet("sitemap.xml")]
         public async Task<IActionResult> Destinations()
         {
+            // Check if sitemap is in cache
+            if (_memoryCache.TryGetValue(CacheKey, out string? cachedSitemap))
+            {
+                _logger.LogInformation("Returning cached sitemap");
+                return Content(cachedSitemap, "application/xml; charset=utf-8");
+            }
+
             try
             {
                 var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -102,9 +115,16 @@ namespace web.holidaydo.mvc.Controllers
                     new XDeclaration("1.0", "utf-8", "yes"),
                     urlset);
 
-                return Content(
-                    document.ToString(SaveOptions.DisableFormatting),
-                    "application/xml; charset=utf-8");
+                var sitemapContent = document.ToString(SaveOptions.DisableFormatting);
+
+                // Cache the sitemap for 60 minutes
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheDurationMinutes));
+
+                _memoryCache.Set(CacheKey, sitemapContent, cacheOptions);
+                _logger.LogInformation($"Sitemap cached for {CacheDurationMinutes} minutes");
+
+                return Content(sitemapContent, "application/xml; charset=utf-8");
             }
             catch (RequestFailedException ex)
             {
