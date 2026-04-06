@@ -168,9 +168,14 @@ else
         </section>
     }
 
-    <section id="longdescription" class="py-2 bg-hd-light">
-        <div class="container">
-            <p>@Html.Raw(destination.LongDescription ?? string.Empty)</p>
+ 
+
+    <section id="destination-spotlight" class="destination-spotlight-section py-5 py-lg-6">
+        <div class="container text-center">
+            <h2 class="destination-spotlight-title mb-4">@destination.Title</h2>
+            <p class="destination-spotlight-copy mb-0">
+                @(destination.LongDescription ?? string.Empty)
+            </p>
         </div>
     </section>
 }
