@@ -21,6 +21,7 @@ namespace web.holidaydo.mvc.Controllers
 
         public async Task<IActionResult> Index(string slug, int id)
         {
+            
             var client = _httpClientFactory.CreateClient();
 
             // Fire both requests simultaneously
@@ -77,6 +78,10 @@ namespace web.holidaydo.mvc.Controllers
                 SearchProducts  = searchProducts,
                 Deals           = deals
             };
+
+            ViewData["Title"] = "Find Great Activites for " + viewModel.Title + " | HolidayDo - Do More on Holiday";
+            ViewData["Description"] =  viewModel.Description;
+
 
             return View(viewModel);
         }

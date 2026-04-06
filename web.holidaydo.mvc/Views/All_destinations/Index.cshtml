@@ -1,4 +1,7 @@
-﻿@{
+﻿@using web.holidaydo.mvc.Controllers
+@model List<All_destinationsController.RegionWithCountries>
+
+@{
     ViewData["Title"] = "All Destinations";
 }
 
@@ -14,101 +17,41 @@
     <!-- Page Title -->
     <h1 class="mb-5 fw-bold">All Destinations</h1>
 
-    <!-- North and South America Section -->
-    <section class="mb-5">
-        <h2 class="h4 fw-bold text-dark mb-4">North and South America</h2>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/argentina" class="text-decoration-none text-info">Argentina</a></li>
-                    <li class="mb-3"><a href="/destination/canada" class="text-decoration-none text-info">Canada</a></li>
-                    <li class="mb-3"><a href="/destination/jamaica" class="text-decoration-none text-info">Jamaica</a></li>
-                    <li class="mb-3"><a href="/destination/united-states" class="text-decoration-none text-info">United States</a></li>
-                </ul>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/aruba" class="text-decoration-none text-info">Aruba</a></li>
-                    <li class="mb-3"><a href="/destination/colombia" class="text-decoration-none text-info">Colombia</a></li>
-                    <li class="mb-3"><a href="/destination/mexico" class="text-decoration-none text-info">Mexico</a></li>
-                </ul>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/bahamas" class="text-decoration-none text-info">Bahamas</a></li>
-                    <li class="mb-3"><a href="/destination/costa-rica" class="text-decoration-none text-info">Costa Rica</a></li>
-                    <li class="mb-3"><a href="/destination/peru" class="text-decoration-none text-info">Peru</a></li>
-                </ul>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/brazil" class="text-decoration-none text-info">Brazil</a></li>
-                    <li class="mb-3"><a href="/destination/dominican-republic" class="text-decoration-none text-info">Dominican Republic</a></li>
-                    <li class="mb-3"><a href="/destination/puerto-rico" class="text-decoration-none text-info">Puerto Rico</a></li>
-                </ul>
-            </div>
-        </div>
-        <hr class="my-4">
-    </section>
-
-    <!-- Europe, Middle East and Africa Section -->
-    <section class="mb-5">
-        <h2 class="h4 fw-bold text-dark mb-4">Europe, the Middle East and Africa</h2>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/austria" class="text-decoration-none text-info">Austria</a></li>
-                    <li class="mb-3"><a href="/destination/denmark" class="text-decoration-none text-info">Denmark</a></li>
-                    <li class="mb-3"><a href="/destination/france" class="text-decoration-none text-info">France</a></li>
-                    <li class="mb-3"><a href="/destination/iceland" class="text-decoration-none text-info">Iceland</a></li>
-                    <li class="mb-3"><a href="/destination/kenya" class="text-decoration-none text-info">Kenya</a></li>
-                    <li class="mb-3"><a href="/destination/malta" class="text-decoration-none text-info">Malta</a></li>
-                    <li class="mb-3"><a href="/destination/poland" class="text-decoration-none text-info">Poland</a></li>
-                    <li class="mb-3"><a href="/destination/serbia" class="text-decoration-none text-info">Serbia</a></li>
-                    <li class="mb-3"><a href="/destination/spain" class="text-decoration-none text-info">Spain</a></li>
-                </ul>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/belgium" class="text-decoration-none text-info">Belgium</a></li>
-                    <li class="mb-3"><a href="/destination/egypt" class="text-decoration-none text-info">Egypt</a></li>
-                    <li class="mb-3"><a href="/destination/germany" class="text-decoration-none text-info">Germany</a></li>
-                    <li class="mb-3"><a href="/destination/ireland" class="text-decoration-none text-info">Ireland</a></li>
-                    <li class="mb-3"><a href="/destination/latvia" class="text-decoration-none text-info">Latvia</a></li>
-                    <li class="mb-3"><a href="/destination/monaco" class="text-decoration-none text-info">Monaco</a></li>
-                    <li class="mb-3"><a href="/destination/portugal" class="text-decoration-none text-info">Portugal</a></li>
-                    <li class="mb-3"><a href="/destination/slovakia" class="text-decoration-none text-info">Slovakia</a></li>
-                    <li class="mb-3"><a href="/destination/sweden" class="text-decoration-none text-info">Sweden</a></li>
-                </ul>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/croatia" class="text-decoration-none text-info">Croatia</a></li>
-                    <li class="mb-3"><a href="/destination/estonia" class="text-decoration-none text-info">Estonia</a></li>
-                    <li class="mb-3"><a href="/destination/greece" class="text-decoration-none text-info">Greece</a></li>
-                    <li class="mb-3"><a href="/destination/italy" class="text-decoration-none text-info">Italy</a></li>
-                    <li class="mb-3"><a href="/destination/lithuania" class="text-decoration-none text-info">Lithuania</a></li>
-                    <li class="mb-3"><a href="/destination/morocco" class="text-decoration-none text-info">Morocco</a></li>
-                    <li class="mb-3"><a href="/destination/qatar" class="text-decoration-none text-info">Qatar</a></li>
-                    <li class="mb-3"><a href="/destination/slovenia" class="text-decoration-none text-info">Slovenia</a></li>
-                    <li class="mb-3"><a href="/destination/switzerland" class="text-decoration-none text-info">Switzerland</a></li>
-                </ul>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <ul class="list-unstyled">
-                    <li class="mb-3"><a href="/destination/czech-republic" class="text-decoration-none text-info">Czech Republic</a></li>
-                    <li class="mb-3"><a href="/destination/finland" class="text-decoration-none text-info">Finland</a></li>
-                    <li class="mb-3"><a href="/destination/hungary" class="text-decoration-none text-info">Hungary</a></li>
-                    <li class="mb-3"><a href="/destination/jordan" class="text-decoration-none text-info">Jordan</a></li>
-                    <li class="mb-3"><a href="/destination/luxembourg" class="text-decoration-none text-info">Luxembourg</a></li>
-                    <li class="mb-3"><a href="/destination/norway" class="text-decoration-none text-info">Norway</a></li>
-                    <li class="mb-3"><a href="/destination/romania" class="text-decoration-none text-info">Romania</a></li>
-                    <li class="mb-3"><a href="/destination/south-africa" class="text-decoration-none text-info">South Africa</a></li>
-                    <li class="mb-3"><a href="/destination/tanzania" class="text-decoration-none text-info">Tanzania</a></li>
-                </ul>
-            </div>
-        </div>
-    </section>
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var region in Model)
+        {
+            <section class="mb-5">
+                <h2 class="h4 fw-bold text-dark mb-4">@region.Title</h2>
+                @if (region.Countries.Any())
+                {
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="destination-list">
+                                @foreach (var country in region.Countries.Take((region.Countries.Count + 1) / 2))
+                                {
+                                    <li><a href="/destination/@country.Slug/@country.Id">@country.Name</a></li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="destination-list">
+                                @foreach (var country in region.Countries.Skip((region.Countries.Count + 1) / 2))
+                                {
+                                    <li><a href="/destination/@country.Slug/@country.Id">@country.Name</a></li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+                <hr class="my-4">
+            </section>
+        }
+    }
+    else
+    {
+        <p class="text-muted">No destinations available.</p>
+    }
 </div>
 
 <style>
@@ -116,13 +59,34 @@
         color: darkblue;
     }
 
-    .text-info {
-        color: darkblue !important;
-        font-size: 1.1rem !important;
+    .destination-list {
+        list-style: none;
+        padding: 0;
     }
 
-    .text-info:hover {
-        color: #0a8ba8 !important;
+    .destination-list li {
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .destination-list li::before {
+        content: "•";
+        color: #f39c12;
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+        line-height: 1;
+    }
+
+    .destination-list a {
+        text-decoration: none;
+        color: darkblue;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+    }
+
+    .destination-list a:hover {
+        color: #0a8ba8;
     }
 
     h2 {
