@@ -29,10 +29,8 @@ namespace web.holidaydo.mvc.Controllers
 
         public async Task<IActionResult> Index(string slug, int id)
         {
-            // Create cache key based on slug and id
             var cacheKey = $"destination_{slug}_{id}";
 
-            // Check if data is in cache
             if (_memoryCache.TryGetValue(cacheKey, out DestinationViewModel? cachedViewModel))
             {
                 return View(cachedViewModel);
@@ -40,7 +38,6 @@ namespace web.holidaydo.mvc.Controllers
 
             var client = _httpClientFactory.CreateClient();
 
-            // Fire both requests simultaneously
             var destinationFetch = client.GetAsync(
                 $"https://fnholidayo.azurewebsites.net/api/destinations/{slug}");
 
@@ -60,7 +57,6 @@ namespace web.holidaydo.mvc.Controllers
             if (apiResponse is null)
                 return View((DestinationViewModel?)null);
 
-            // Parse products
             SearchProductsResponse? searchProducts = null;
             if (productsFetch is not null)
             {
@@ -73,38 +69,111 @@ namespace web.holidaydo.mvc.Controllers
                 }
             }
 
-            // Fetch Wowcher deals
             List<CityBreakDeal>? deals = null;
             if (apiResponse.Extra?.DealApiUrl is not null)
                 deals = await _wowcherService.GetDestinationDealsAsync(apiResponse.Extra.DealApiUrl);
 
+            var destinationType = apiResponse.Destination?.Type ?? string.Empty;
+            var destinationId = apiResponse.Destination?.DestinationId ?? 0;
+
+            List<DestinationLink> countryCities = [];
+            if (destinationType == "COUNTRY" && destinationId > 0)
+            {
+                using var treeResponse = await client.GetAsync(
+                    $"https://fnholidayo.azurewebsites.net/api/destination/tree/{destinationId}");
+
+                if (treeResponse.IsSuccessStatusCode)
+                {
+                    await using var treeStream = await treeResponse.Content.ReadAsStreamAsync();
+                    var tree = await JsonSerializer.DeserializeAsync<List<DestinationTreeNode>>(
+                        treeStream, JsonOptions) ?? [];
+
+                    countryCities = GetLeafDestinations(tree)
+                        .Where(x =>
+                            x.DestinationId != destinationId &&
+                            string.Equals(x.Type, "CITY", StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(x => x.Name)
+                        .Select(x => new DestinationLink
+                        {
+                            DestinationId = x.DestinationId,
+                            Name = x.Name,
+                            Slug = ToSlug(x.Name)
+                        })
+                        .ToList();
+                }
+            }
+
             var title = apiResponse.Meta?.Name ?? apiResponse.Destination?.Name ?? FormatSlug(slug);
 
-            ViewData["Title"]       = $"Holiday Activities for {title} - Do More on Holiday";
+            ViewData["Title"] = $"Holiday Activities for {title} - Do More on Holiday";
             ViewData["Description"] = $"{apiResponse.Meta?.Summary} - {title}";
 
             var viewModel = new DestinationViewModel
             {
-                Title           = title,
-                Description     = apiResponse.Meta?.Summary,
+                Title = title,
+                Description = apiResponse.Meta?.Summary,
                 LongDescription = apiResponse.Meta?.Content,
-                Slug            = slug,
-                Id              = id,
-                Extra           = apiResponse.Extra,
-                SearchProducts  = searchProducts,
-                Deals           = deals
+                Type = destinationType,
+                DestinationId = destinationId,
+                Slug = slug,
+                Id = id,
+                Extra = apiResponse.Extra,
+                SearchProducts = searchProducts,
+                Deals = deals,
+                CountryCities = countryCities
             };
 
             ViewData["Title"] = "Find Great Activites for " + viewModel.Title + " | HolidayDo - Do More on Holiday";
             ViewData["Description"] = viewModel.Description;
 
-            // Cache the result for 15 minutes
             var cacheOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheDurationMinutes));
 
             _memoryCache.Set(cacheKey, viewModel, cacheOptions);
 
             return View(viewModel);
+        }
+
+        private static IEnumerable<DestinationTreeNode> GetLeafDestinations(IEnumerable<DestinationTreeNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Children is null || node.Children.Count == 0)
+                {
+                    yield return node;
+                    continue;
+                }
+
+                foreach (var child in GetLeafDestinations(node.Children))
+                {
+                    yield return child;
+                }
+            }
+        }
+
+        private static string ToSlug(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            var builder = new System.Text.StringBuilder();
+            var previousWasDash = false;
+
+            foreach (var ch in value.Trim().ToLowerInvariant())
+            {
+                if (char.IsLetterOrDigit(ch))
+                {
+                    builder.Append(ch);
+                    previousWasDash = false;
+                }
+                else if (!previousWasDash)
+                {
+                    builder.Append('-');
+                    previousWasDash = true;
+                }
+            }
+
+            return builder.ToString().Trim('-');
         }
 
         public static string FormatSlug(string? slug)
@@ -148,8 +217,6 @@ namespace web.holidaydo.mvc.Controllers
                 ? string.Empty
                 : rating.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
 
-        // ── Inner models ────────────────────────────────────────────────────────
-
         public sealed class DestinationApiResponse
         {
             public DestinationData? Destination { get; set; }
@@ -187,16 +254,35 @@ namespace web.holidaydo.mvc.Controllers
             public bool Image { get; set; }
         }
 
+        public sealed class DestinationTreeNode
+        {
+            public int DestinationId { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public string Type { get; set; } = string.Empty;
+            public int ParentDestinationId { get; set; }
+            public List<DestinationTreeNode> Children { get; set; } = [];
+        }
+
+        public sealed class DestinationLink
+        {
+            public int DestinationId { get; init; }
+            public string Name { get; init; } = string.Empty;
+            public string Slug { get; init; } = string.Empty;
+        }
+
         public sealed class DestinationViewModel
         {
             public string Title { get; init; } = string.Empty;
             public string? Description { get; init; }
             public string? LongDescription { get; init; }
+            public string Type { get; init; } = string.Empty;
+            public int DestinationId { get; init; }
             public string Slug { get; init; } = string.Empty;
             public int Id { get; init; }
             public DestinationExtra? Extra { get; init; }
             public SearchProductsResponse? SearchProducts { get; init; }
             public List<CityBreakDeal>? Deals { get; init; }
+            public List<DestinationLink> CountryCities { get; init; } = [];
         }
     }
 }

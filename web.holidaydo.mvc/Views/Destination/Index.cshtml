@@ -35,6 +35,7 @@ else
         </div>
     </section>
 
+
     @if (destination.SearchProducts?.Products.Any() == true)
     {
         <section id="destination-widget" class="py-2 bg-hd-light">
@@ -178,6 +179,22 @@ else
             </p>
         </div>
     </section>
+
+    @if (destination.Type == "COUNTRY" && destination.CountryCities.Any())
+    {
+        <section class="destination-info py-4">
+            <div class="container">
+                <h2>Explore @destination.Title further:</h2>
+                <div class="city-scroll d-flex flex-wrap gap-3">
+                    @foreach (var city in destination.CountryCities)
+                    {
+                        <a href="@Url.Action("Index", "Destination", new { slug = city.Slug, id = city.DestinationId })"
+                           class="city-link">@city.Name</a>
+                    }
+                </div>
+            </div>
+        </section>
+    }
 }
 
 @functions {
