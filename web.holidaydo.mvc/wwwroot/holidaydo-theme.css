@@ -1410,7 +1410,8 @@ body.app-ready .site-footer {
     transition: all 0.2s ease;
 }
 
-    .city-link:hover {
+.city-link:hover {
         background: #0d6efd;
         color: #fff;
     }
+
