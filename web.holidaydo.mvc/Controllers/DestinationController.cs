@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using web.holidaydo.mvc.Models;
@@ -14,17 +16,26 @@ namespace web.holidaydo.mvc.Controllers
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly WowcherService _wowcherService;
         private readonly IMemoryCache _memoryCache;
+        private readonly IAmazonAuthTokenService _amazonAuthTokenService;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<DestinationController> _logger;
 
         private const int CacheDurationMinutes = 15;
 
         public DestinationController(
             IHttpClientFactory httpClientFactory,
             WowcherService wowcherService,
-            IMemoryCache memoryCache)
+            IMemoryCache memoryCache,
+            IAmazonAuthTokenService amazonAuthTokenService,
+            IConfiguration configuration,
+            ILogger<DestinationController> logger)
         {
             _httpClientFactory = httpClientFactory;
             _wowcherService = wowcherService;
             _memoryCache = memoryCache;
+            _amazonAuthTokenService = amazonAuthTokenService;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(string slug, int id)
@@ -104,6 +115,8 @@ namespace web.holidaydo.mvc.Controllers
             }
 
             var title = apiResponse.Meta?.Name ?? apiResponse.Destination?.Name ?? FormatSlug(slug);
+            var booktitle = title +  " travel guide";
+            var books = await GetBooksAsync(booktitle, HttpContext.RequestAborted);
 
             ViewData["Title"] = $"Holiday Activities for {title} - Do More on Holiday";
             ViewData["Description"] = $"{apiResponse.Meta?.Summary} - {title}";
@@ -120,7 +133,8 @@ namespace web.holidaydo.mvc.Controllers
                 Extra = apiResponse.Extra,
                 SearchProducts = searchProducts,
                 Deals = deals,
-                CountryCities = countryCities
+                CountryCities = countryCities,
+                Books = books
             };
 
             ViewData["Title"] = "Find Great Activites for " + viewModel.Title + " | HolidayDo - Do More on Holiday";
@@ -132,6 +146,229 @@ namespace web.holidaydo.mvc.Controllers
             _memoryCache.Set(cacheKey, viewModel, cacheOptions);
 
             return View(viewModel);
+        }
+
+        private async Task<List<AmazonBook>> GetBooksAsync(string keyword, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return [];
+            }
+
+            var searchUrl = _configuration["amazon_api_search_items_url"];
+            var partnerTag = _configuration["amazon_partner_tag"];
+            var marketplace = _configuration["amazon_marketplace"] ?? "www.amazon.co.uk";
+            var credentialVersion = _configuration["amazon_credential_version"];
+            var browseNodeId = _configuration["amazon_books_travel_browse_node_id"] ?? "83";
+
+            if (string.IsNullOrWhiteSpace(searchUrl) || string.IsNullOrWhiteSpace(partnerTag))
+            {
+                _logger.LogWarning("Amazon book search configuration is missing.");
+                return [];
+            }
+
+            try
+            {
+                var accessToken = await _amazonAuthTokenService.GetAccessTokenAsync(cancellationToken);
+
+                var payload = new
+                {
+                    partnerTag,
+                    marketplace,
+                    keywords = keyword,
+                    searchIndex = "Books",
+                    browseNodeId,
+                    sortBy = "Relevance",
+                    itemCount = 6,
+                    resources = new[]
+                    {
+                        "images.primary.medium",
+                        "itemInfo.title",
+                        "itemInfo.byLineInfo",
+                        "offersV2.listings.price"
+                    }
+                };
+
+                var authHeaderValue = string.IsNullOrWhiteSpace(credentialVersion)
+                    ? $"Bearer {accessToken}"
+                    : $"Bearer {accessToken}, Version {credentialVersion}";
+
+                var client = _httpClientFactory.CreateClient();
+                const int maxAttempts = 3;
+
+                for (var attempt = 1; attempt <= maxAttempts; attempt++)
+                {
+                    using var request = new HttpRequestMessage(HttpMethod.Post, searchUrl);
+                    request.Headers.TryAddWithoutValidation("Authorization", authHeaderValue);
+                    request.Headers.TryAddWithoutValidation("x-marketplace", marketplace);
+                    request.Content = JsonContent.Create(payload);
+
+                    using var response = await client.SendAsync(request, cancellationToken);
+                    var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                    if ((int)response.StatusCode == 429)
+                    {
+                        if (attempt == maxAttempts)
+                        {
+                            _logger.LogWarning("Amazon book search rate-limited after {Attempts} attempts.", attempt);
+                            return [];
+                        }
+
+                        var retryDelay = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(attempt * 2);
+                        await Task.Delay(retryDelay, cancellationToken);
+                        continue;
+                    }
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        _logger.LogError("Amazon book search failed. Status: {StatusCode}, Body: {Body}", response.StatusCode, body);
+                        return [];
+                    }
+
+                    return ParseBooks(body);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Amazon book search failed for keyword {Keyword}.", keyword);
+            }
+
+            return [];
+        }
+
+        private static List<AmazonBook> ParseBooks(string json)
+        {
+            using var document = JsonDocument.Parse(json);
+
+            if (!TryGetPath(document.RootElement, out var items, "searchResult", "items") ||
+                items.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            var books = new List<AmazonBook>();
+
+            foreach (var item in items.EnumerateArray())
+            {
+                var title = GetString(item, "itemInfo", "title", "displayValue");
+                if (string.IsNullOrWhiteSpace(title))
+                {
+                    continue;
+                }
+
+                books.Add(new AmazonBook
+                {
+                    Title = title,
+                    Author = GetAuthor(item),
+                    ImageUrl = GetString(item, "images", "primary", "medium", "url"),
+                    Url = GetString(item, "detailPageUrl") ?? GetString(item, "detailPageURL"),
+                    Price = GetDecimal(item, "offersV2", "listings", 0, "price", "amount"),
+                    PriceDisplay = GetString(item, "offersV2", "listings", 0, "price", "displayAmount"),
+                    Currency = GetString(item, "offersV2", "listings", 0, "price", "currency")
+                });
+            }
+
+            return books;
+        }
+
+        private static string? GetAuthor(JsonElement item)
+        {
+            if (TryGetPath(item, out var contributors, "itemInfo", "byLineInfo", "contributors") &&
+                contributors.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var contributor in contributors.EnumerateArray())
+                {
+                    var name = GetString(contributor, "name") ?? GetString(contributor, "displayName");
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        return name;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static string? GetString(JsonElement element, params object[] path)
+        {
+            if (!TryGetPath(element, out var value, path))
+            {
+                return null;
+            }
+
+            return value.ValueKind switch
+            {
+                JsonValueKind.String => value.GetString(),
+                JsonValueKind.Number => value.GetRawText(),
+                _ => null
+            };
+        }
+
+        private static decimal? GetDecimal(JsonElement element, params object[] path)
+        {
+            if (!TryGetPath(element, out var value, path))
+            {
+                return null;
+            }
+
+            if (value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out var number))
+            {
+                return number;
+            }
+
+            if (value.ValueKind == JsonValueKind.String &&
+                decimal.TryParse(value.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out number))
+            {
+                return number;
+            }
+
+            return null;
+        }
+
+        private static bool TryGetPath(JsonElement element, out JsonElement current, params object[] path)
+        {
+            current = element;
+
+            foreach (var segment in path)
+            {
+                if (segment is string propertyName)
+                {
+                    if (!TryGetPropertyIgnoreCase(current, propertyName, out current))
+                    {
+                        return false;
+                    }
+                }
+                else if (segment is int index)
+                {
+                    if (current.ValueKind != JsonValueKind.Array || current.GetArrayLength() <= index)
+                    {
+                        return false;
+                    }
+
+                    current = current[index];
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool TryGetPropertyIgnoreCase(JsonElement element, string propertyName, out JsonElement value)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    value = property.Value;
+                    return true;
+                }
+            }
+
+            value = default;
+            return false;
         }
 
         private static IEnumerable<DestinationTreeNode> GetLeafDestinations(IEnumerable<DestinationTreeNode> nodes)
@@ -178,21 +415,27 @@ namespace web.holidaydo.mvc.Controllers
 
         public static string FormatSlug(string? slug)
         {
-            if (string.IsNullOrWhiteSpace(slug)) return "Destinations";
-            return string.Join(" ", slug.Split('-')
+            if (string.IsNullOrWhiteSpace(slug))
+                return "Destinations";
+
+            return string.Join(" ", slug
+                .Split('-', StringSplitOptions.RemoveEmptyEntries)
                 .Select(w => char.ToUpper(w[0]) + w[1..]));
         }
 
         public static string FormatFlag(string? flag)
         {
-            if (string.IsNullOrWhiteSpace(flag)) return string.Empty;
+            if (string.IsNullOrWhiteSpace(flag))
+                return string.Empty;
+
             flag = flag.Replace('_', ' ').ToLowerInvariant();
             return char.ToUpper(flag[0]) + flag[1..];
         }
 
         public static string FormatDuration(int? minutes, bool showUnit)
         {
-            if (minutes is null or <= 0) return string.Empty;
+            if (minutes is null or <= 0)
+                return string.Empty;
 
             if (!showUnit)
             {
@@ -203,9 +446,10 @@ namespace web.holidaydo.mvc.Controllers
 
             if (minutes < 60)
                 return $"{minutes} minute{(minutes == 1 ? "" : "s")}";
-            
+
+
             var hours = minutes.Value / 60;
-            var mins  = minutes.Value % 60;
+            var mins = minutes.Value % 60;
 
             return mins == 0
                 ? $"{hours} hour{(hours == 1 ? "" : "s")}"
@@ -216,6 +460,17 @@ namespace web.holidaydo.mvc.Controllers
             rating is null
                 ? string.Empty
                 : rating.Value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+
+        public sealed class AmazonBook
+        {
+            public string Title { get; init; } = string.Empty;
+            public string? Author { get; init; }
+            public string? ImageUrl { get; init; }
+            public decimal? Price { get; init; }
+            public string? PriceDisplay { get; init; }
+            public string? Currency { get; init; }
+            public string? Url { get; init; }
+        }
 
         public sealed class DestinationApiResponse
         {
@@ -283,6 +538,7 @@ namespace web.holidaydo.mvc.Controllers
             public SearchProductsResponse? SearchProducts { get; init; }
             public List<CityBreakDeal>? Deals { get; init; }
             public List<DestinationLink> CountryCities { get; init; } = [];
+            public List<AmazonBook> Books { get; init; } = [];
         }
     }
 }
