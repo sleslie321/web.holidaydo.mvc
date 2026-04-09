@@ -145,39 +145,49 @@ else
 
     @if (destination.Extra?.DealApiUrl != null && destination.Deals?.Any() == true)
     {
-        <section id="topdeals" class="py-2">
+        <section id="topdeals" class="py-5 bg-white">
             <div class="container">
-                <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-                    <div>
-                        <h2 class="section-title mb-2">Top deals in @destination.Title</h2>
-                        <p class="text-secondary mb-0">Grab yourself a deal - changing daily!</p>
-                    </div>
+                <div class="text-center mb-5">
+                    <h2 class="text-uppercase fw-semibold d-inline-block border-bottom border-2 border-success pb-2 px-4">
+                        Top deals in @destination.Title
+                    </h2>
+                    <p class="text-secondary mb-0 mt-2">Grab yourself a deal - changing daily!</p>
                 </div>
-                <div class="row g-4">
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-0 border-top border-start">
                     @foreach (var deal in destination.Deals!.Take(3))
                     {
-                        <div class="col-md-6 col-xl-4">
-                            <div class="card h-100">
-                                <div class="card-body p-4">
+                        var originalUrl = "https://www.wowcher.co.uk" + deal.UrlPath;
+                        var affiliateUrl =
+                            $"https://www.awin1.com/cread.php?awinmid=3595&awinaffid=5819&ued={WebUtility.UrlEncode(originalUrl)}";
+
+                        <div class="col border-end border-bottom">
+                            <article class="d-flex flex-column justify-content-between p-4 h-100">
+                                <div>
                                     @if (deal.DiscountPercentageIncludingAdminFee is > 0)
                                     {
-                                        <span class="badge-soft badge-soft-blue mb-3">Save up to @deal.DiscountPercentageIncludingAdminFee%</span>
+                                        <div class="small text-danger fw-semibold mb-2">
+                                            Save up to @deal.DiscountPercentageIncludingAdminFee%
+                                        </div>
                                     }
-                                    @{
-                                      var originalUrl = "https://www.wowcher.co.uk"+@deal.UrlPath;
-   
-                                      var affiliateUrl =
-                                            $"https://www.awin1.com/cread.php?awinmid=3595&awinaffid=5819&ued={WebUtility.UrlEncode(originalUrl)}";
+
+                                    <h3 class="h5 mb-3">
+                                        <a href="@affiliateUrl" target="_blank" rel="noopener noreferrer">@deal.Headline</a>
+                                    </h3>
+
+                                    @if (!string.IsNullOrWhiteSpace(deal.Title))
+                                    {
+                                        <div class="small text-secondary mb-3">@deal.Title</div>
                                     }
-                                    <h3 class="h5 fw-bold"><a href="@affiliateUrl" target="_blank" rel="noopener noreferrer">@deal.Headline</a></h3>
-                                    <p class="text-secondary">@deal.Title</p>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <small class="text-secondary">
-                                            From <strong class="text-dark">£@deal.Price</strong>
-                                        </small>
-                                    </div>
                                 </div>
-                            </div>
+
+                                @if (deal.Price.HasValue)
+                                {
+                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                        <span class="fs-4 fw-bold text-success">£@deal.Price.Value.ToString("0.00")</span>
+                                    </div>
+                                }
+                            </article>
                         </div>
                     }
                 </div>
