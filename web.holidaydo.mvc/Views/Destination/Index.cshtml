@@ -5,8 +5,8 @@
 @{
     var destination = Model;
     var breadcrumbs = string.IsNullOrWhiteSpace(destination?.BreadCrumbJson)
-        ? new List<BreadcrumbItem>()
-        : System.Text.Json.JsonSerializer.Deserialize<List<BreadcrumbItem>>(destination.BreadCrumbJson) ?? new List<BreadcrumbItem>();
+        ? new List<System.Text.Json.JsonElement>()
+        : System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(destination.BreadCrumbJson) ?? new List<System.Text.Json.JsonElement>();
 }
 
 
@@ -39,47 +39,63 @@ else
         </div>
     </section>
 
-    @if (breadcrumbs.Any())
-    {
-        <nav aria-label="breadcrumb" class="mb-1">
-            <div class="container">
-                <ol class="breadcrumb mb-0 px-3 py-2 bg-body-tertiary border rounded">
-                    <li class="breadcrumb-item">
-                        <a href="/" aria-label="Home">
-                            <i class="bi bi-house-fill"></i>
-                            <span class="visually-hidden">Home</span>
-                        </a>
-                    </li>
+    <div class="container mb-3">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-2">
 
-                    @for (var i = 0; i < breadcrumbs.Count; i++)
-                    {
-                        var crumb = breadcrumbs[i];
-                        var isLast = i == breadcrumbs.Count - 1;
-                        var href = i == 0
-                            ? $"/region/{crumb.slug}/{crumb.destinationId}"
-                            : $"/destination/{crumb.slug}/{crumb.destinationId}";
+            @if (breadcrumbs.Any())
+            {
+                <nav aria-label="breadcrumb" class="mb-0 flex-grow-1">
+                    <ol class="breadcrumb mb-0 px-3 py-2 bg-body-tertiary border rounded">
+                        <li class="breadcrumb-item">
+                            <a href="/" aria-label="Home">
+                                <i class="bi bi-house-fill"></i>
+                                <span class="visually-hidden">Home</span>
+                            </a>
+                        </li>
 
-                        if (isLast)
+                        @for (var i = 0; i < breadcrumbs.Count; i++)
                         {
-                            <li class="breadcrumb-item active" aria-current="page">@crumb.name</li>
+                            var crumb = breadcrumbs[i];
+                            var isLast = i == breadcrumbs.Count - 1;
+                            var crumbSlug = crumb.TryGetProperty("slug", out var slugProperty)
+                                ? slugProperty.GetString() ?? string.Empty
+                                : string.Empty;
+                            var crumbDestinationId = crumb.TryGetProperty("destinationId", out var destinationIdProperty) && destinationIdProperty.TryGetInt32(out var destinationId)
+                                ? destinationId
+                                : 0;
+                            var crumbName = crumb.TryGetProperty("name", out var nameProperty)
+                                ? nameProperty.GetString() ?? string.Empty
+                                : string.Empty;
+                            var href = i == 0
+                                ? $"/region/{crumbSlug}/{crumbDestinationId}"
+                                : $"/destination/{crumbSlug}/{crumbDestinationId}";
+
+                            if (isLast)
+                            {
+                                <li class="breadcrumb-item active" aria-current="page">@crumbName</li>
+                            }
+                            else
+                            {
+                                <li class="breadcrumb-item">
+                                    <a href="@href">@crumbName</a>
+                                </li>
+                            }
                         }
-                        else
-                        {
-                            <li class="breadcrumb-item">
-                                <a href="@href">@crumb.name</a>
-                            </li>
-                        }
-                    }
-                </ol>
-            </div>
-        </nav>
-    }
- 
+                    </ol>
+                </nav>
+            }
+
+           
+        </div>
+    </div>
 
     @if (destination.SearchProducts?.Products.Any() == true)
     {
         <section id="destination-widget" class="py-1 bg-hd-light">
             <div class="container py-4">
+
+                
+
                 <div class="row g-4">
                     @foreach (Product product in destination.SearchProducts.Products)
                     {
@@ -95,7 +111,7 @@ else
 
                                 <div class="pt-2 tour-card-body">
                                     <div class="rating-line">
-                                        Average rating: @FormatRating(product.Reviews?.CombinedAverageRating)
+                                        Average rating: @DestinationController.FormatRating(product.Reviews?.CombinedAverageRating)
                                         <i class="bi bi-star-fill star"></i>
                                         from @product.Reviews?.TotalReviews reviews
                                     </div>
@@ -113,7 +129,7 @@ else
                                             <div class="meta-line">
                                                 <i class="bi bi-check-circle"></i>
                                                 <div class="flags-list">
-                                                    <span class="flag-item">@FormatFlag(flag)</span>
+                                                    <span class="flag-item">@DestinationController.FormatFlag(flag)</span>
                                                 </div>
                                             </div>
                                         }
@@ -123,11 +139,11 @@ else
                                         <i class="bi bi-clock"></i>
                                         @if (product.Duration?.FixedDurationInMinutes != null)
                                         {
-                                            <span>@FormatDuration(product.Duration.FixedDurationInMinutes, true)</span>
+                                            <span>@DestinationController.FormatDuration(product.Duration.FixedDurationInMinutes, true)</span>
                                         }
                                         @if (product.Duration?.VariableDurationFromMinutes != null)
                                         {
-                                            <span>@FormatDuration(product.Duration?.VariableDurationFromMinutes, false) - @FormatDuration(product.Duration?.VariableDurationToMinutes, true)</span>
+                                            <span>@DestinationController.FormatDuration(product.Duration?.VariableDurationFromMinutes, false) - @DestinationController.FormatDuration(product.Duration?.VariableDurationToMinutes, true)</span>
                                         }
                                     </div>
 
@@ -138,9 +154,53 @@ else
                             </div>
                         </div>
                     }
+
+                     @if (destination.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-center justify-content-md-end mb-3">
+                <nav aria-label="Destination products pages">
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(destination.CurrentPage == 1 ? "disabled" : "")">
+                            @if (destination.CurrentPage == 1)
+                            {
+                                <span class="page-link">Previous</span>
+                            }
+                            else
+                            {
+                                <a class="page-link"
+                                   href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = destination.CurrentPage - 1 })">Previous</a>
+                            }
+                        </li>
+
+                        @for (var p = 1; p <= destination.TotalPages; p++)
+                        {
+                            <li class="page-item @(p == destination.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = p })">@p</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(destination.CurrentPage == destination.TotalPages ? "disabled" : "")">
+                            @if (destination.CurrentPage == destination.TotalPages)
+                            {
+                                <span class="page-link">Next</span>
+                            }
+                            else
+                            {
+                                <a class="page-link"
+                                   href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = destination.CurrentPage + 1 })">Next</a>
+                            }
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
                 </div>
+
             </div>
         </section>
+       
+
     }
 
     @if (destination.Extra?.DealApiUrl != null && destination.Deals?.Any() == true)
@@ -312,58 +372,5 @@ else
             </div>
         </section>
     }
-    @if (breadcrumbs.Any())
-    {
-        <nav aria-label="breadcrumb" class="mb-1">
-            <div class="container">
-                <ol class="breadcrumb mb-0 px-3 py-2 bg-body-tertiary border rounded">
-                    <li class="breadcrumb-item">
-                        <a href="/" aria-label="Home">
-                            <i class="bi bi-house-fill"></i>
-                            <span class="visually-hidden">Home</span>
-                        </a>
-                    </li>
-
-                    @for (var i = 0; i < breadcrumbs.Count; i++)
-                    {
-                        var crumb = breadcrumbs[i];
-                        var isLast = i == breadcrumbs.Count - 1;
-                        var href = i == 0
-                            ? $"/region/{crumb.slug}/{crumb.destinationId}"
-                            : $"/destination/{crumb.slug}/{crumb.destinationId}";
-
-                        if (isLast)
-                        {
-                            <li class="breadcrumb-item active" aria-current="page">@crumb.name</li>
-                        }
-                        else
-                        {
-                            <li class="breadcrumb-item">
-                                <a href="@href">@crumb.name</a>
-                            </li>
-                        }
-                    }
-                </ol>
-            </div>
-        </nav>
-    }
-}
-
-@functions {
-    sealed class BreadcrumbItem
-    {
-        public string name { get; set; } = string.Empty;
-        public int destinationId { get; set; }
-        public string slug { get; set; } = string.Empty;
-    }
-
-    static string FormatFlag(string? flag) =>
-        DestinationController.FormatFlag(flag);
-
-    static string FormatDuration(int? minutes, bool showUnit) =>
-        DestinationController.FormatDuration(minutes, showUnit);
-
-    static string FormatRating(double? rating) =>
-        DestinationController.FormatRating(rating); 
 }
 

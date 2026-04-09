@@ -21,6 +21,7 @@ namespace web.holidaydo.mvc.Controllers
         private readonly ILogger<DestinationController> _logger;
 
         private const int CacheDurationMinutes = 15;
+        private const int WidgetTotalPages = 5;
 
         public DestinationController(
             IHttpClientFactory httpClientFactory,
@@ -38,9 +39,11 @@ namespace web.holidaydo.mvc.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index(string slug, int id)
+        public async Task<IActionResult> Index(string slug, int id, int page = 1)
         {
-            var cacheKey = $"destination_{slug}_{id}";
+            page = Math.Clamp(page, 1, WidgetTotalPages);
+
+            var cacheKey = $"destination_{slug}_{id}_page_{page}";
 
             if (_memoryCache.TryGetValue(cacheKey, out DestinationViewModel? cachedViewModel))
             {
@@ -53,7 +56,7 @@ namespace web.holidaydo.mvc.Controllers
                 $"https://fnholidayo.azurewebsites.net/api/destinations/{slug}");
 
             var productsFetch = id > 0
-                ? client.GetAsync($"https://fnholidayo.azurewebsites.net/api/SearchProducts?vid={id}")
+                ? client.GetAsync($"https://fnholidayo.azurewebsites.net/api/SearchProducts?vid={id}&page={page}")
                 : null;
 
             using var destinationResponse = await destinationFetch;
@@ -118,8 +121,6 @@ namespace web.holidaydo.mvc.Controllers
             var booktitle = title +  " travel guide";
             var books = await GetBooksAsync(booktitle, HttpContext.RequestAborted);
 
-       
-
             var viewModel = new DestinationViewModel
             {
                 Title = title,
@@ -134,7 +135,9 @@ namespace web.holidaydo.mvc.Controllers
                 Deals = deals,
                 CountryCities = countryCities,
                 Books = books,
-                BreadCrumbJson = apiResponse.Destination?.BreadCrumbJson
+                BreadCrumbJson = apiResponse.Destination?.BreadCrumbJson,
+                CurrentPage = page,
+                TotalPages = WidgetTotalPages
             };
 
             ViewData["Title"] = "Find Great Activites for " + viewModel.Title + " | HolidayDo - Do More on Holiday";
@@ -541,6 +544,8 @@ namespace web.holidaydo.mvc.Controllers
             public List<DestinationLink> CountryCities { get; init; } = [];
             public List<AmazonBook> Books { get; init; } = [];
             public string? BreadCrumbJson { get; init; }
+            public int CurrentPage { get; init; } = 1;
+            public int TotalPages { get; init; } = 5;
         }
     }
 }
