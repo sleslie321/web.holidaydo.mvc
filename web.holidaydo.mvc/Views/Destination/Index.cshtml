@@ -100,7 +100,7 @@ else
                     @foreach (Product product in destination.SearchProducts.Products)
                     {
                         <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="tour-card">
+                            <div class="tour-card border border-secondary-subtle">
                                 <div class="image-wrap">
                                     @if (product.Flags != null && product.Flags.Contains("LIKELY_TO_SELL_OUT"))
                                     {
@@ -155,46 +155,46 @@ else
                         </div>
                     }
 
-                     @if (destination.TotalPages > 1)
-        {
-            <div class="d-flex justify-content-center justify-content-md-end mb-3">
-                <nav aria-label="Destination products pages">
-                    <ul class="pagination mb-0">
-                        <li class="page-item @(destination.CurrentPage == 1 ? "disabled" : "")">
-                            @if (destination.CurrentPage == 1)
-                            {
-                                <span class="page-link">Previous</span>
-                            }
-                            else
-                            {
-                                <a class="page-link"
-                                   href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = destination.CurrentPage - 1 })">Previous</a>
-                            }
-                        </li>
+                    @if (destination.TotalPages > 1)
+                    {
+                        <div class="d-flex justify-content-center justify-content-md-end mb-3">
+                            <nav aria-label="Destination products pages">
+                                <ul class="pagination mb-0">
+                                    <li class="page-item @(destination.CurrentPage == 1 ? "disabled" : "")">
+                                        @if (destination.CurrentPage == 1)
+                                        {
+                                            <span class="page-link">Previous</span>
+                                        }
+                                        else
+                                        {
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = destination.CurrentPage - 1 })">Previous</a>
+                                        }
+                                    </li>
 
-                        @for (var p = 1; p <= destination.TotalPages; p++)
-                        {
-                            <li class="page-item @(p == destination.CurrentPage ? "active" : "")">
-                                <a class="page-link"
-                                   href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = p })">@p</a>
-                            </li>
-                        }
+                                    @for (var p = 1; p <= destination.TotalPages; p++)
+                                    {
+                                        <li class="page-item @(p == destination.CurrentPage ? "active" : "")">
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = p })">@p</a>
+                                        </li>
+                                    }
 
-                        <li class="page-item @(destination.CurrentPage == destination.TotalPages ? "disabled" : "")">
-                            @if (destination.CurrentPage == destination.TotalPages)
-                            {
-                                <span class="page-link">Next</span>
-                            }
-                            else
-                            {
-                                <a class="page-link"
-                                   href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = destination.CurrentPage + 1 })">Next</a>
-                            }
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        }
+                                    <li class="page-item @(destination.CurrentPage == destination.TotalPages ? "disabled" : "")">
+                                        @if (destination.CurrentPage == destination.TotalPages)
+                                        {
+                                            <span class="page-link">Next</span>
+                                        }
+                                        else
+                                        {
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", "Destination", new { slug = destination.Slug, id = destination.Id, page = destination.CurrentPage + 1 })">Next</a>
+                                        }
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    }
                 </div>
 
             </div>
