@@ -118,8 +118,7 @@ namespace web.holidaydo.mvc.Controllers
             var booktitle = title +  " travel guide";
             var books = await GetBooksAsync(booktitle, HttpContext.RequestAborted);
 
-            ViewData["Title"] = $"Holiday Activities for {title} - Do More on Holiday";
-            ViewData["Description"] = $"{apiResponse.Meta?.Summary} - {title}";
+       
 
             var viewModel = new DestinationViewModel
             {
@@ -134,7 +133,8 @@ namespace web.holidaydo.mvc.Controllers
                 SearchProducts = searchProducts,
                 Deals = deals,
                 CountryCities = countryCities,
-                Books = books
+                Books = books,
+                BreadCrumbJson = apiResponse.Destination?.BreadCrumbJson
             };
 
             ViewData["Title"] = "Find Great Activites for " + viewModel.Title + " | HolidayDo - Do More on Holiday";
@@ -485,6 +485,7 @@ namespace web.holidaydo.mvc.Controllers
             public string Name { get; set; } = string.Empty;
             public string Type { get; set; } = string.Empty;
             public string Slug { get; set; } = string.Empty;
+            public string? BreadCrumbJson { get; set; }
             public string? DestinationUrl { get; set; }
             public string? DefaultCurrencyCode { get; set; }
             public string? TimeZone { get; set; }
@@ -539,6 +540,7 @@ namespace web.holidaydo.mvc.Controllers
             public List<CityBreakDeal>? Deals { get; init; }
             public List<DestinationLink> CountryCities { get; init; } = [];
             public List<AmazonBook> Books { get; init; } = [];
+            public string? BreadCrumbJson { get; init; }
         }
     }
 }
